@@ -59,6 +59,7 @@ struct EventRow: View {
     @Previewable var event: Event = Event(
         title: "Example Event 👻",
         date: Date().addingTimeInterval(60*60*24*7*5),
-        textColor: Color.mint)
+        textColor: Color.mint
+    )
     EventRow(event: event)
 }
