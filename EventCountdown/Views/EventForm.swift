@@ -38,7 +38,7 @@ struct EventForm: View {
             Section("Event Details") {
                 TextField("Title",text: $eventTitle, prompt: Text("Title"))
                 DatePicker("Date", selection: $eventDate, in: .now...)
-                ColorPicker("Text Color", selection: $eventTextColor)
+                ColorPicker("Text Color", selection: $eventTextColor, supportsOpacity: false)
             }
         }
         .navigationTitle(getNavTitle())
