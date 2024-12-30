@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUICore
 
-struct Event: Identifiable, Comparable {
+struct Event: Identifiable, Comparable, Hashable {
     
     static func < (lhs: Event, rhs: Event) -> Bool {
         //compare by date
@@ -31,10 +31,7 @@ extension Array<Event> {
     
     //Calling .sorted() on an array of events returns the events sorted by date (sooner first)
     func sorted(events: [Event]) -> [Event] {
-        var sortedEvents: [Event] = []
-        events.forEach { Event in
-            sortedEvents.append(Event)
-        }
+        var sortedEvents = events
         sortedEvents.sort(by: { $0.date.compare($1.date) == .orderedAscending })
         return sortedEvents
     }

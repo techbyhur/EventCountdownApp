@@ -12,25 +12,35 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack {
-            List(events.indices, id: \.self) { index in
-                NavigationLink {
-                    EventForm(events: $events, event: events[index])
-                } label: {
-                    EventRow(event: events[index])
-                }.swipeActions {
+            List(events, id: \.self) { event in
+                NavigationLink(value: event) {
+                    EventRow(event: event)
+                }
+                .swipeActions {
                     Button("Delete", systemImage: "trash") {
                         //remove event
-                        events.remove(at: index)
+                        events.removeAll(where: { $0 == event })
                     }.tint(.red)
                 }
-            }.onAppear {
+            }
+            .navigationDestination(for: Event.self) { event in
+                EventForm(event: event) { e in
+                    guard let index = events.firstIndex(
+                        where: { $0.id == e.id }
+                    ) else { return }
+                    events[index] = e
+                }
+            }
+            .onAppear {
                 events = events.sorted()
             }
             .navigationTitle("Events")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink {
-                        EventForm(events: $events, event: nil)
+                        EventForm(event: nil) { e in
+                            events.append(e)
+                        }
                     } label: {
                         Button("Add Event", systemImage: "plus") { }
                     }

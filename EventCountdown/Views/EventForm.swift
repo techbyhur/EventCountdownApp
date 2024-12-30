@@ -23,53 +23,51 @@ struct EventForm: View {
     @State var eventTitle: String = ""
     @State var eventDate: Date = Date()
     @State var eventTextColor: Color = Color.black
-    
-    @Binding var events: [Event]
     @State var event: Event?
     
-    init(events: Binding<[Event]>, event: Event?) {
-        _events = events
+    let onSave: (Event) -> Void
+    
+    init(event: Event?, onSave: @escaping (Event) -> Void) {
         _event = State(initialValue: event)
+        self.onSave = onSave
         initialize(event: event)
     }
     
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Event Details") {
-                    TextField("Title",text: $eventTitle, prompt: Text("Title"))
-                    DatePicker("Date", selection: $eventDate, in: .now...)
-                    ColorPicker("Text Color", selection: $eventTextColor)
-                }
+        Form {
+            Section("Event Details") {
+                TextField("Title",text: $eventTitle, prompt: Text("Title"))
+                DatePicker("Date", selection: $eventDate, in: .now...)
+                ColorPicker("Text Color", selection: $eventTextColor)
             }
-            .navigationTitle(getNavTitle())
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Save Event", systemImage: "checkmark") {
-                        onSave(Event(title: eventTitle,date: eventDate,textColor: eventTextColor))
-                        self.presentationMode.wrappedValue.dismiss()
-                    }
-                    .disabled(eventTitle.isEmpty)
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        if (shouldShowCancelDialog()) {
-                            showingCancelAlert = true
-                        } else {
-                            self.presentationMode.wrappedValue.dismiss()
-                        }
-                    }
-                }
-            }.alert("Are you sure?", isPresented: $showingCancelAlert) {
-                Button("Yes", role: .destructive) {
+        }
+        .navigationTitle(getNavTitle())
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Save Event", systemImage: "checkmark") {
+                    saveEvent(Event(title: eventTitle, date: eventDate, textColor: eventTextColor))
                     self.presentationMode.wrappedValue.dismiss()
                 }
-                Button("No", role: .cancel) { }
-            } message: {
-                Text("You have unsaved changes. Are you sure you want to cancel?")
+                .disabled(eventTitle.isEmpty)
             }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    if (shouldShowCancelDialog()) {
+                        showingCancelAlert = true
+                    } else {
+                        self.presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+        }.alert("Are you sure?", isPresented: $showingCancelAlert) {
+            Button("Yes", role: .destructive) {
+                self.presentationMode.wrappedValue.dismiss()
+            }
+            Button("No", role: .cancel) { }
+        } message: {
+            Text("You have unsaved changes. Are you sure you want to cancel?")
         }
     }
     
@@ -95,28 +93,21 @@ struct EventForm: View {
         }
     }
     
-    private func onSave(_ event: Event) -> Void {
-        print("event details: \(event.title)")
+    private func saveEvent(_ event: Event) {
         switch mode {
-        case .newEvent: self._events.wrappedValue.append(event)
-        case .editEvent: updateEvent(event)
-        }
-    }
-    
-    private func updateEvent(_ event: Event) {
-        guard let index = self._events.wrappedValue.firstIndex(
-            where: { $0.id == self.event!.id }
-        ) else {
-            return
-        }
-        self.event!.update(event: event)
-        self._events.wrappedValue[index] = self.event!
+        case .newEvent: onSave(event)
+        case .editEvent: do {
+            self.event!.update(event: event)
+            onSave(self.event!)
+        }}
     }
 }
 
 #Preview {
-    @Previewable @State var events: [Event] = []
     @Previewable var event: Event? = Event(title: "Test Event 👻", date: Date().addingTimeInterval(60*60*24*7), textColor: .mint)
     @Previewable var emptyEvent: Event? = nil
-    EventForm(events: $events, event: emptyEvent)
+    var events: [Event] = []
+    EventForm(event: emptyEvent) { event in
+        events.append(event)
+    }
 }

@@ -11,10 +11,11 @@ import SwiftUI
 
 struct EventRow: View {
     @State var countdownDate: String = ""
+    @State private var now = Date.now
     
     let event: Event
     
-    private let dateFormatter: RelativeDateTimeFormatter = RelativeDateTimeFormatter()
+    private let dateFormatter = RelativeDateTimeFormatter()
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -24,41 +25,30 @@ struct EventRow: View {
                 .font(.title2)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(countdownDate)
+            Text(getCountdownDate(for: event.date, relativeTo: now))
                 .fontWeight(.medium)
                 .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .onReceive(timer) { time in
-            handleTimerUpdate()
-        }
-        .onAppear {
-            countdownDate = getRelativeDateString()
+                .onReceive(timer) { date in
+                    now = date
+                }
         }
     }
     
-    private func getRelativeDateString() -> String {
-        if (Date() > event.date) {
+    private func getCountdownDate(for date: Date, relativeTo currentDate: Date) -> String {
+        if (now > event.date) {
+            timer.upstream.connect().cancel()
             return "Event has passed!"
         }
-        return dateFormatter.localizedString(for: event.date, relativeTo: Date())
-    }
-    
-    private func handleTimerUpdate() {
-        if Date() > event.date {
-            timer.upstream.connect().cancel()
-            return countdownDate = "Event has passed!"
-        }
-        if Date() < event.date {
-            return countdownDate = getRelativeDateString()
-            
-        }
+        dateFormatter.unitsStyle = .full
+        dateFormatter.dateTimeStyle = .named
+        return dateFormatter.localizedString(for: date, relativeTo: currentDate)
     }
 }
 
 #Preview {
     @Previewable var event: Event = Event(
         title: "Example Event 👻",
-        date: Date().addingTimeInterval(60*60*24*7*5),
+        date: Date().addingTimeInterval(60*60*24*7),
         textColor: Color.mint
     )
     EventRow(event: event)
