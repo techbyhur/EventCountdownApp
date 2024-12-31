@@ -15,7 +15,6 @@ struct EventRow: View {
     
     let event: Event
     
-    private let dateFormatter = RelativeDateTimeFormatter()
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -35,10 +34,7 @@ struct EventRow: View {
     }
     
     private func getCountdownDate(for date: Date, relativeTo currentDate: Date) -> String {
-        if (now > event.date) {
-            timer.upstream.connect().cancel()
-            return "Event has passed!"
-        }
+        let dateFormatter = RelativeDateTimeFormatter()
         dateFormatter.unitsStyle = .full
         dateFormatter.dateTimeStyle = .named
         return dateFormatter.localizedString(for: date, relativeTo: currentDate)
