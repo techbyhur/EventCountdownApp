@@ -34,6 +34,10 @@ struct EventRow: View {
     }
     
     private func getCountdownDate(for date: Date, relativeTo currentDate: Date) -> String {
+        if (now > event.date) {
+            timer.upstream.connect().cancel()
+            return "Event has passed!"
+        }
         let dateFormatter = RelativeDateTimeFormatter()
         dateFormatter.unitsStyle = .full
         dateFormatter.dateTimeStyle = .named
